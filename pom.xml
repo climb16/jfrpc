@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>online.jfree</groupId>
+    <artifactId>jfrpc</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <modules>
+        <module>jfrpc-registry</module>
+        <module>jfrpc-common</module>
+        <module>jfrpc-core</module>
+        <module>jfrpc-server</module>
+        <module>jfrpc-client</module>
+    </modules>
+
+    <properties>
+        <jfrpc.version>1.0.0-SNAPSHOT</jfrpc.version>
+        <jfrpc-common.version>${jfrpc.version}</jfrpc-common.version>
+        <jfrpc-core.version>${jfrpc.version}</jfrpc-core.version>
+        <jfrpc-registry.version>${jfrpc.version}</jfrpc-registry.version>
+        <jfrpc-client.version>${jfrpc.version}</jfrpc-client.version>
+        <jfrpc-server.version>${jfrpc.version}</jfrpc-server.version>
+
+        <zookeeper.vesion>3.4.12</zookeeper.vesion>
+
+        <netty.version>4.1.25.Final</netty.version>
+        <cglib.version>3.2.6</cglib.version>
+        <kryo.version>4.0.2</kryo.version>
+
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
+        <junit.version>4.12</junit.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>online.jfree</groupId>
+                <artifactId>jfrpc-common</artifactId>
+                <version>${jfrpc-common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>online.jfree</groupId>
+                <artifactId>jfrpc-core</artifactId>
+                <version>${jfrpc-core.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>online.jfree</groupId>
+                <artifactId>jfrpc-registry</artifactId>
+                <version>${jfrpc-registry.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>online.jfree</groupId>
+                <artifactId>jfrpc-client</artifactId>
+                <version>${jfrpc-client.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>online.jfree</groupId>
+                <artifactId>jfrpc-server</artifactId>
+                <version>${jfrpc-server.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zookeeper.vesion}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>jline</groupId>
+                        <artifactId>jline</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo-shaded</artifactId>
+                <version>${kryo.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cglib</groupId>
+                <artifactId>cglib</artifactId>
+                <version>${cglib.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
