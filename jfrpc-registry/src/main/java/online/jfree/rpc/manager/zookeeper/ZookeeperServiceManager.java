@@ -8,6 +8,7 @@ import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
@@ -26,7 +27,7 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
 
     private ZooKeeper zookeeper;
 
-    public void init(){
+    public void init() {
         try {
             //不要关闭zookeeper会话，否则临时节点会被移除
             zookeeper = new ZooKeeper(config.getZkAddress(), config.getSessionTimeout(), new ConnWatcher());
@@ -41,7 +42,7 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
 
     @Override
     public boolean register(Service service) {
-        try{
+        try {
             //创建服务节点
             String serviceIdPath = config.getRootPath() + "/" + service.getServiceId();
             createNodePath(serviceIdPath, EMPTY_DATA, CreateMode.PERSISTENT);
@@ -50,18 +51,18 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
             byte[] data = config.getSerializable().serialize(service);
             createNodePath(serviceNodePath, data, CreateMode.EPHEMERAL);
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             return false;
         }
     }
 
     @Override
-    public Service discover(String serviceId) {
+    public List<Service> discover(String serviceId) {
         return discover(serviceId, null);
     }
 
     @Override
-    public Service discover(String serviceId, String version) {
+    public List<Service> discover(String serviceId, String version) {
         // 获取 service 节点
         String serviceIdPath = config.getRootPath() + "/" + serviceId;
         List<String> addressList = getChildrenPath(serviceIdPath);
@@ -69,19 +70,35 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
             throw new RuntimeException(String.format("can not find any address node on path: %s", serviceIdPath));
         }
         // 获取 address 节点
-        String serviceNodePath;
         int size = addressList.size();
-        if (size == 1) {
-            // 若只有一个地址，则获取该地址
-            serviceNodePath = addressList.get(0);
-            logger.debug("get only address node: {}", serviceNodePath);
-        } else {
-            // 若存在多个地址，则随机获取一个地址
-            serviceNodePath = addressList.get(ThreadLocalRandom.current().nextInt(size));
-            logger.debug("get random address node: {}", serviceNodePath);
+        List<Service> serviceList = new ArrayList<>(size);
+        for (String address : addressList) {
+            Service service = new Service();
+            service.setServiceId(serviceId);
+            this.split(service, address);
+            serviceList.add(service);
         }
         // 获取 address 节点的值
-        return getNodePath(serviceIdPath + "/" + serviceNodePath);
+        //return getNodePath(serviceIdPath + "/" + serviceNodePath);
+        return serviceList;
+    }
+
+    private void split(Service service, String address) {
+        if (!StringUtil.isEmpty(address)) {
+            if (address.contains("&")) {
+                String addr[] = address.split("&");
+                String host = addr[0];
+                String version = addr[1];
+                service.setVersion(version);
+                if (host.contains(":")) {
+                    String hosts[] = host.split(":");
+                    String ip = hosts[0];
+                    String port = hosts[1];
+                    service.setAddress(ip);
+                    service.setPort(Integer.parseInt(port));
+                }
+            }
+        }
     }
 
     private synchronized void createNodePath(String path, byte[] data, CreateMode mode) {
@@ -112,10 +129,11 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
 
     /**
      * 获取当前节点所有子节点
+     *
      * @param path
      * @return
      */
-    private List<String> getChildrenPath(String path){
+    private List<String> getChildrenPath(String path) {
         if (!existsNodePath(path)) {
             logger.error("can not found any service node on serviceId [{}]", path);
             throw new RuntimeException("can not found any service node on serviceId " + path);
@@ -128,7 +146,7 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
         }
     }
 
-    private Service getNodePath(String path){
+    private Service getNodePath(String path) {
         if (!existsNodePath(path)) {
             logger.error("can not found any service node on serviceId [{}]", path);
             throw new RuntimeException("can not found any service node on serviceId " + path);
@@ -145,10 +163,11 @@ public class ZookeeperServiceManager extends AbstractServiceManager implements S
 
     /**
      * 拼装服务实例节点
+     *
      * @param service
      * @return
      */
-    private String createServiceNode(Service service){
+    private String createServiceNode(Service service) {
         String serviceIdPath = config.getRootPath() + "/" + service.getServiceId();
         String serviceNodePath = serviceIdPath + "/" + service.getAddress() + ":" + service.getPort();
         if (!StringUtil.isEmpty(service.getVersion())) {

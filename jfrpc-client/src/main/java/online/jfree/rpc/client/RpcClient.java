@@ -1,10 +1,11 @@
-package online.jfree.rpc.server;
+package online.jfree.rpc.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import online.jfree.rpc.client.loadbalance.RandomLoanBalanceRule;
 import online.jfree.rpc.common.util.codec.RpcCoder;
 import online.jfree.rpc.common.util.serializable.ObjectSerializable;
 import online.jfree.rpc.core.annotation.RpcService;
@@ -18,6 +19,8 @@ import online.jfree.rpc.manager.zookeeper.ZookeeperConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
  * @description:
  * @author: Guo Lixiao
@@ -28,6 +31,7 @@ public class RpcClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
     private ServiceRegistryConfig registryConfig = new ServiceRegistryConfig();
+    private LoadBalanceRule loadBalanceRule = new RandomLoanBalanceRule();
 
     public RpcResponse send(RpcRequest request, RpcService rpcService){
         //  RPC 服务注中心配置
@@ -44,7 +48,13 @@ public class RpcClient {
         }
         registryConfig.setZookeeperConfig(zookeeperConfig[0]);
         ServiceManager serviceRegistry = ServiceManagerFactory.createServiceManager(rpcService.register(), registryConfig);
-        Service service = serviceRegistry.discover(rpcService.serviceId(), rpcService.version());
+        List<Service> services = serviceRegistry.discover(rpcService.serviceId(), rpcService.version());
+
+        /**  负载均衡选举 **/
+        if (loadBalanceRule == null) {
+            loadBalanceRule = new RandomLoanBalanceRule();
+        }
+        Service service = loadBalanceRule.chooseServer(services);
         logger.debug("discover service: {} => {}", service.toString());
         EventLoopGroup group = new NioEventLoopGroup();
         try {
@@ -90,5 +100,9 @@ public class RpcClient {
         } finally {
             group.shutdownGracefully();
         }
+    }
+
+    public void setLoadBalanceRule(LoadBalanceRule loadBalanceRule) {
+        this.loadBalanceRule = loadBalanceRule;
     }
 }

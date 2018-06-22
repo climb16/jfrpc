@@ -1,4 +1,4 @@
-package online.jfree.rpc.server;
+package online.jfree.rpc.client;
 
 import net.sf.cglib.proxy.Proxy;
 import online.jfree.rpc.core.annotation.RpcService;
@@ -21,11 +21,29 @@ public class RpcClientProxy {
 
     private static final RpcClient client = new RpcClient();
 
-    public static <T> T create(final Class<?> interfaceClass) {
+    /**
+     * 创建 服务代理类
+     * @param interfaceClass 服务接口
+     * @param <T> 服务代理类
+     * @return
+     */
+    public static <T> T create(final Class<?> interfaceClass){
+        return create(interfaceClass, null);
+    }
+
+    /**
+     * 创建 服务代理类
+     * @param interfaceClass 服务接口
+     * @param loadBalanceRule 负载策略
+     * @param <T> 服务代理类
+     * @return
+     */
+    public static <T> T create(final Class<?> interfaceClass, LoadBalanceRule loadBalanceRule) {
         final RpcService rpcService = interfaceClass.getAnnotation(RpcService.class);
         if (rpcService == null) {
             throw new RuntimeException("interfaceClass : [ " + interfaceClass + " ], not JFRpcServer");
         }
+        client.setLoadBalanceRule(loadBalanceRule);
         // 创建动态代理对象
         return (T) Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(),

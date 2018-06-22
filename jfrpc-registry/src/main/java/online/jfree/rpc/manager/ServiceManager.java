@@ -3,6 +3,8 @@ package online.jfree.rpc.manager;
 
 import online.jfree.rpc.core.bean.Service;
 
+import java.util.List;
+
 /**
  * @description: 服务管理器，提供服务注册和发现能力
  * @author: Guo Lixiao
@@ -23,7 +25,7 @@ public interface ServiceManager {
      * @param serviceId 服务id
      * @return 服务实例
      */
-    Service discover(String serviceId);
+    List<Service> discover(String serviceId);
 
     /**
      * 服务发现
@@ -31,5 +33,5 @@ public interface ServiceManager {
      * @param version 服务版本
      * @return 服务实例
      */
-    Service discover(String serviceId, String version);
+    List<Service> discover(String serviceId, String version);
 }
